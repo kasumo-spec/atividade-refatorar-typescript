@@ -10,9 +10,9 @@ import { Food as FoodType } from '../../types';
 
 const Dashboard = () => {
   const [ foods, setFoods ] = useState<FoodType[]>( [] );
+  const [ editingFood, setEditingFood ] = useState<FoodType>( {} as FoodType );
   const [ modalOpen, setModalOpen ] = useState( false );
   const [ editModalOpen, setEditModalOpen ] = useState( false );
-  const [ editingFood, setEditingFood ] = useState<FoodType>();
 
   useEffect( () => {
 	async function loadFoods() {
@@ -23,7 +23,7 @@ const Dashboard = () => {
 	loadFoods();
   }, [] );
 
-  const handleAddFood = async (food: FoodType) => {
+  const handleAddFood = async (food: Omit<FoodType, 'id' | 'available'>) => {
 	const updateFoods = [ ...foods ];
 
 	try {
@@ -39,15 +39,13 @@ const Dashboard = () => {
   };
 
   const handleUpdateFood = async (food: FoodType) => {
-	const updateFoods = [ ...foods ];
-
 	try {
 	  const foodUpdated = await api.put(
-		  `/foods/${ food.id }`,
-		  { ...food },
+		  `/foods/${ editingFood.id }`,
+		  { ...editingFood, ...food },
 	  );
 
-	  const foodsUpdated = updateFoods.map( f =>
+	  const foodsUpdated = foods.map( f =>
 		  f.id !== foodUpdated.data.id ? f : foodUpdated.data,
 	  );
 
@@ -59,11 +57,9 @@ const Dashboard = () => {
   };
 
   const handleDeleteFood = async (id: number) => {
-	const updateFoods = [ ...foods ];
-
 	await api.delete( `/foods/${ id }` );
 
-	const foodsFiltered = updateFoods.filter( food => food.id !== id );
+	const foodsFiltered = foods.filter( food => food.id !== id );
 
 	setFoods( foodsFiltered );
   };
